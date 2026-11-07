@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema NFC Bar & Restaurante v1.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            900: '#7c2d12'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Navigation / Header System -->
+    <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 py-3 shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid fa-wifi"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight flex items-center gap-2">
+                        Smart Waiter NFC
+                        <span class="text-xs bg-brand-500/20 text-brand-400 px-2 py-0.5 rounded-full border border-brand-500/30">v1.0 Release</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Sistema Comercial para Bares & Restaurantes</p>
+                </div>
+            </div>
+
+            <!-- View Switcher Tabs -->
+            <nav class="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+                <button onclick="switchView('client')" id="tab-client" class="tab-btn px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-mobile-screen-button"></i> Vista Cliente
+                </button>
+                <button onclick="switchView('staff')" id="tab-staff" class="tab-btn px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-bell"></i> Painel Staff
+                    <span id="badge-count" class="hidden bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+                </button>
+                <button onclick="switchView('settings')" id="tab-settings" class="tab-btn px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-sliders"></i> Configurações
+                </button>
+            </nav>
+
+            <!-- Mesa Selector Quick Simulator -->
+            <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+                <i class="fa-solid fa-chair text-slate-400 text-xs"></i>
+                <label for="table-simulator" class="text-xs text-slate-400">Mesa Atual:</label>
+                <select id="table-simulator" onchange="changeSimulatedTable(this.value)" class="bg-transparent text-xs font-bold text-brand-400 focus:outline-none cursor-pointer">
+                    <!-- Dynamic Populated 1 to 60 -->
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto p-4 md:p-6">
+
+        <!-- ================= VIEW 1: CLIENT VIEW ================= -->
+        <section id="view-client" class="view-section max-w-md mx-auto py-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl text-center space-y-6">
+                <!-- Mesa Header Badge -->
+                <div class="inline-flex items-center gap-2 bg-slate-950 border border-slate-800 px-4 py-2 rounded-full text-brand-400 font-bold text-sm">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <span id="client-table-label">Mesa 01</span>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-extrabold text-white">Como podemos te ajudar?</h2>
+                    <p class="text-xs text-slate-400 mt-1">Toque em uma das opções abaixo para solicitar atendimento direto na sua mesa.</p>
+                </div>
+
+                <!-- Call Buttons -->
+                <div class="grid grid-cols-1 gap-4 pt-2">
+                    <!-- Option 1: Copeiro / Barman -->
+                    <button onclick="sendCall('Copeiro')" class="group relative overflow-hidden bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 active:scale-95 transition-all p-6 rounded-2xl text-left shadow-lg shadow-cyan-900/30">
+                        <div class="flex items-center justify-between">
+                            <div class="space-y-1">
+                                <span class="bg-white/20 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">Opção 1</span>
+                                <h3 class="text-xl font-black text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-beer-mug-empty"></i> Copeiro / Bar
+                                </h3>
+                                <p class="text-xs text-cyan-100/80">Pedidos de bebidas, chopp, drinks ou copos extras</p>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-white/50 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </button>
+
+                    <!-- Option 2: Atendente / Garçom -->
+                    <button onclick="sendCall('Atendente')" class="group relative overflow-hidden bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 transition-all p-6 rounded-2xl text-left shadow-lg shadow-emerald-900/30">
+                        <div class="flex items-center justify-between">
+                            <div class="space-y-1">
+                                <span class="bg-white/20 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">Opção 2</span>
+                                <h3 class="text-xl font-black text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-user-ninja"></i> Atendente / Garçom
+                                </h3>
+                                <p class="text-xs text-emerald-100/80">Cardápio, pratos, tirar dúvidas ou pedir a conta</p>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-white/50 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Status Feedback Overlay -->
+                <div id="client-feedback" class="hidden p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 text-emerald-400 space-y-2 animate-bounce">
+                    <i class="fa-solid fa-circle-check text-3xl"></i>
+                    <h4 class="font-bold text-sm">Solicitação enviada com sucesso!</h4>
+                    <p class="text-xs text-slate-400">Um funcionário já foi notificado e está a caminho.</p>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800 text-[11px] text-slate-500 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-shield-halved"></i> Conexão Segura via NFC
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= VIEW 2: STAFF DASHBOARD ================= -->
+        <section id="view-staff" class="view-section hidden space-y-6">
+            <!-- Staff Top Bar & Controls -->
+            <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                <div>
+                    <h2 class="text-xl font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-bell text-brand-500"></i> Painel de Chamados Ativos
+                    </h2>
+                    <p class="text-xs text-slate-400">Monitoramento em tempo real com alertas sonoros e smartwatch</p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="requestNotificationPermission()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-xl border border-slate-700 font-semibold flex items-center gap-2 transition-all">
+                        <i class="fa-solid fa-mobile-retro text-amber-400"></i> Ativar Notificações Push
+                    </button>
+                    <button onclick="clearAllCalls()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs px-3 py-2 rounded-xl border border-red-500/20 font-semibold transition-all">
+                        Limpar Todos
+                    </button>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="no-calls-state" class="text-center py-16 bg-slate-900/50 border border-dashed border-slate-800 rounded-3xl space-y-3">
+                <div class="w-16 h-16 mx-auto rounded-full bg-slate-800/80 flex items-center justify-center text-slate-600 text-2xl">
+                    <i class="fa-solid fa-mug-hot"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-300">Nenhum chamado pendente</h3>
+                <p class="text-xs text-slate-500">Os novos chamados feitos pelas mesas aparecerão aqui em tempo real.</p>
+            </div>
+
+            <!-- Calls Grid -->
+            <div id="calls-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Dynamic Call Cards populated by JS -->
+            </div>
+        </section>
+
+        <!-- ================= VIEW 3: SETTINGS VIEW ================= -->
+        <section id="view-settings" class="view-section hidden space-y-8">
+            
+            <!-- Section 1: NFC Tag Programmer/Scanner -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div>
+                        <h3 class="text-lg font-bold flex items-center gap-2 text-white">
+                            <i class="fa-solid fa-nfc-symbol text-brand-500"></i> Gravar & Vincular Tags NFC
+                        </h3>
+                        <p class="text-xs text-slate-400">Aproxime a Tag NFC do smartphone para gravar o link da mesa (Web NFC API)</p>
+                    </div>
+                    <span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-300 border border-slate-700">60 Mesas Suportadas</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Selecione a Mesa a gravar:</label>
+                            <select id="nfc-target-table" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-400 focus:outline-none focus:border-brand-500">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <button onclick="startNFCScan()" class="w-full bg-brand-600 hover:bg-brand-500 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 transition-all">
+                            <i class="fa-solid fa-wifi text-lg"></i> Escanear e Gravar Tag NFC
+                        </button>
+                        <p id="nfc-status" class="text-xs text-slate-400 text-center italic min-h-[1.5rem]">Aguardando ação...</p>
+                    </div>
+
+                    <!-- NFC Card Preview -->
+                    <div class="md:col-span-2 bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-3">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">URL que será gravada na Tag:</h4>
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 font-mono text-xs text-emerald-400 break-all select-all flex items-center justify-between">
+                            <span id="nfc-preview-url">https://seu-bar.com/index.html?mesa=1</span>
+                            <button onclick="navigator.clipboard.writeText(document.getElementById('nfc-preview-url').innerText)" class="text-slate-400 hover:text-white text-xs">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-500">Dica: Ao encostar o smartphone do cliente na Tag gravada, o navegador abrirá diretamente a tela do cliente selecionando a mesa correspondente.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Team & Staff Management -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Add Staff Form -->
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-cyan-400"></i> Cadastrar Equipe
+                    </h3>
+                    <form onsubmit="addStaffMember(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Nome do Funcionário</label>
+                            <input type="text" id="staff-name" required placeholder="Ex: Carlos Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Função / Cargo</label>
+                            <select id="staff-role" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-cyan-500">
+                                <option value="Atendente">Atendente / Garçom</option>
+                                <option value="Copeiro">Copeiro / Barman</option>
+                                <option value="Gerente">Gerente de Salão</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Setor Responsável</label>
+                            <select id="staff-sector" class="sector-dropdown w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-cyan-500">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 font-bold py-2.5 text-xs rounded-xl text-white transition-all shadow-md">
+                            Adicionar Funcionário
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Staff List -->
+                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-users text-emerald-400"></i> Equipe Cadastrada
+                    </h3>
+                    <div id="staff-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Sector & Table Map Management -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-amber-500"></i> Divisão de Setores & Mapa das 60 Mesas
+                        </h3>
+                        <p class="text-xs text-slate-400">Organize as mesas em grupos (Salão, Varanda, VIP, etc.) e acompanhe a vinculação de NFC</p>
+                    </div>
+
+                    <!-- Add Sector Inline -->
+                    <form onsubmit="addSector(event)" class="flex items-center gap-2">
+                        <input type="text" id="sector-name" placeholder="Novo Setor (Ex: Deck)" required class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500">
+                        <input type="color" id="sector-color" value="#f59e0b" class="w-8 h-8 rounded-lg bg-transparent cursor-pointer border border-slate-800">
+                        <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-all">
+                            + Setor
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Active Sectors Badges -->
+                <div id="sectors-list" class="flex flex-wrap gap-2">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Table Map Grid (1 to 60) -->
+                <div>
+                    <h4 class="text-xs font-bold text-slate-400 mb-3">Mapa Interativo de Mesas (Clique em uma mesa para trocar seu setor):</h4>
+                    <div id="tables-grid" class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-2">
+                        <!-- 60 Tables generated via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Application Script -->
+    <script>
+        // --- DATA STATE & PERSISTENCE ---
+        const DEFAULT_STATE = {
+            tables: Array.from({ length: 60 }, (_, i) => ({
+                id: i + 1,
+                sectorId: (i + 1) <= 15 ? 1 : (i + 1) <= 30 ? 2 : (i + 1) <= 45 ? 3 : 4,
+                nfcLinked: false
+            })),
+            sectors: [
+                { id: 1, name: "Salão Principal", color: "#3b82f6" },
+                { id: 2, name: "Varanda", color: "#10b981" },
+                { id: 3, name: "Área VIP", color: "#8b5cf6" },
+                { id: 4, name: "Deck Externo", color: "#f59e0b" }
+            ],
+            staff: [
+                { id: 1, name: "João Pereira", role: "Atendente", sectorId: 1, available: true },
+                { id: 2, name: "Mariana Souza", role: "Copeiro", sectorId: 1, available: true }
+            ],
+            calls: []
+        };
+
+        let appData = JSON.parse(localStorage.getItem('bar_nfc_v1_data')) || DEFAULT_STATE;
+
+        function saveData() {
+            localStorage.setItem('bar_nfc_v1_data', JSON.stringify(appData));
+        }
+
+        let currentSimulatedTable = 1;
+        let audioContext = null;
+
+        // --- INIT & SETUP ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mesaParam = urlParams.get('mesa');
+            if (mesaParam && parseInt(mesaParam) >= 1 && parseInt(mesaParam) <= 60) {
+                currentSimulatedTable = parseInt(mesaParam);
+            }
+
+            initTableSelector();
+            renderAll();
+            switchView('client');
+            
+            setInterval(renderCalls, 10000);
+        });
+
+        function initTableSelector() {
+            const selectSim = document.getElementById('table-simulator');
+            const selectNfc = document.getElementById('nfc-target-table');
+            selectSim.innerHTML = '';
+            selectNfc.innerHTML = '';
+
+            for (let i = 1; i <= 60; i++) {
+                const opt1 = document.createElement('option');
+                opt1.value = i;
+                opt1.textContent = `Mesa ${i.toString().padStart(2, '0')}`;
+                if (i === currentSimulatedTable) opt1.selected = true;
+                selectSim.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = i;
+                opt2.textContent = `Mesa ${i.toString().padStart(2, '0')}`;
+                selectNfc.appendChild(opt2);
+            }
+            updateNFCPreviewURL();
+            document.getElementById('nfc-target-table').addEventListener('change', updateNFCPreviewURL);
+        }
+
+        function changeSimulatedTable(val) {
+            currentSimulatedTable = parseInt(val);
+            document.getElementById('client-table-label').innerText = `Mesa ${currentSimulatedTable.toString().padStart(2, '0')}`;
+        }
+
+        function updateNFCPreviewURL() {
+            const target = document.getElementById('nfc-target-table').value;
+            const baseUrl = window.location.origin + window.location.pathname;
+            document.getElementById('nfc-preview-url').innerText = `${baseUrl}?mesa=${target}`;
+        }
+
+        // --- VIEW NAVIGATION ---
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-600', 'text-white');
+                btn.classList.add('text-slate-400', 'hover:text-white');
+            });
+
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`tab-${viewName}`);
+            activeTab.classList.add('bg-brand-600', 'text-white');
+            activeTab.classList.remove('text-slate-400');
+        }
+
+        // --- CLIENT ACTIONS ---
+        function sendCall(type) {
+            const table = appData.tables.find(t => t.id === currentSimulatedTable);
+            const sector = appData.sectors.find(s => s.id === (table ? table.sectorId : 1));
+
+            const newCall = {
+                id: Date.now(),
+                tableId: currentSimulatedTable,
+                sectorName: sector ? sector.name : 'Geral',
+                sectorColor: sector ? sector.color : '#3b82f6',
+                type: type,
+                timestamp: new Date().toISOString()
+            };
+
+            appData.calls.unshift(newCall);
+            saveData();
+            renderCalls();
+            triggerAlerts(newCall);
+
+            const feedback = document.getElementById('client-feedback');
+            feedback.classList.remove('hidden');
+            setTimeout(() => {
+                feedback.classList.add('hidden');
+            }, 4000);
+        }
+
+        // --- ALERTS & NOTIFICATIONS ---
+        function playBeep() {
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.3);
+
+                gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                console.log("Audio play blocked or unsupported");
+            }
+        }
+
+        function requestNotificationPermission() {
+            if ("Notification" in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        alert("Notificações ativadas! Os chamados serão espelhados no celular e Smartwatch.");
+                    }
+                });
+            } else {
+                alert("Este navegador não suporta Notificações Push nativas.");
+            }
+        }
+
+        function triggerAlerts(call) {
+            playBeep();
+
+            if ("Notification" in window && Notification.permission === "granted") {
+                const title = `🚨 Mesa ${call.tableId.toString().padStart(2, '0')} chamou ${call.type.toUpperCase()}!`;
+                const options = {
+                    body: `Setor: ${call.sectorName} • Horário: ${new Date(call.timestamp).toLocaleTimeString()}`,
+                    icon: "https://cdn-icons-png.flaticon.com/512/3448/3448609.png",
+                    vibrate: [200, 100, 200, 100, 300]
+                };
+                new Notification(title, options);
+            }
+        }
+
+        // --- STAFF DASHBOARD RENDER ---
+        function renderCalls() {
+            const container = document.getElementById('calls-container');
+            const emptyState = document.getElementById('no-calls-state');
+            const badge = document.getElementById('badge-count');
+
+            if (appData.calls.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                badge.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            badge.classList.remove('hidden');
+            badge.innerText = appData.calls.length;
+
+            container.innerHTML = appData.calls.map(call => {
+                const isCopeiro = call.type === 'Copeiro';
+                const timeAgo = Math.floor((new Date() - new Date(call.timestamp)) / 60000);
+                
+                return `
+                    <div class="bg-slate-900 border-2 ${isCopeiro ? 'border-cyan-500/40' : 'border-emerald-500/40'} rounded-2xl p-5 shadow-xl space-y-4 relative overflow-hidden animate-pulse-once">
+                        <div class="flex items-center justify-between">
+                            <span class="text-3xl font-black text-white">Mesa ${call.tableId.toString().padStart(2, '0')}</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-bold ${isCopeiro ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'} flex items-center gap-1.5">
+                                <i class="fa-solid ${isCopeiro ? 'fa-beer-mug-empty' : 'fa-user-ninja'}"></i>
+                                ${call.type}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span class="flex items-center gap-1">
+                                <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: ${call.sectorColor}"></span>
+                                ${call.sectorName}
+                            </span>
+                            <span class="font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                                <i class="fa-regular fa-clock"></i> há ${timeAgo === 0 ? 'poucos seg' : timeAgo + ' min'}
+                            </span>
+                        </div>
+
+                        <button onclick="dismissCall(${call.id})" class="w-full bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-300 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all border border-slate-700">
+                            <i class="fa-solid fa-check"></i> Atender / Concluir
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function dismissCall(id) {
+            appData.calls = appData.calls.filter(c => c.id !== id);
+            saveData();
+            renderCalls();
+        }
+
+        function clearAllCalls() {
+            appData.calls = [];
+            saveData();
+            renderCalls();
+        }
+
+        // --- NFC SCANNER & PROGRAMMER (Web NFC API) ---
+        async function startNFCScan() {
+            const status = document.getElementById('nfc-status');
+            const targetMesa = document.getElementById('nfc-target-table').value;
+            const baseUrl = window.location.origin + window.location.pathname;
+            const urlToProgram = `${baseUrl}?mesa=${targetMesa}`;
+
+            if ('NDEFReader' in window) {
+                try {
+                    status.innerHTML = `<span class="text-amber-400"><i class="fa-solid fa-spinner fa-spin"></i> Aproxime a Tag NFC do smartphone...</span>`;
+                    const ndef = new NDEFReader();
+                    await ndef.write({
+                        records: [{ recordType: "url", data: urlToProgram }]
+                    });
+
+                    const tableObj = appData.tables.find(t => t.id === parseInt(targetMesa));
+                    if (tableObj) tableObj.nfcLinked = true;
+                    saveData();
+                    renderTableGrid();
+
+                    status.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-check"></i> Tag gravada com sucesso para a Mesa ${targetMesa}!</span>`;
+                } catch (error) {
+                    status.innerHTML = `<span class="text-red-400">Erro ao gravar NFC: ${error.message}</span>`;
+                }
+            } else {
+                const simulate = confirm(`Seu dispositivo ou navegador atual não possui suporte nativo à Web NFC API (ex: iOS Safari ou Desktop).\n\nDeseja simular o salvamento do registro NFC para a Mesa ${targetMesa}?`);
+                if (simulate) {
+                    const tableObj = appData.tables.find(t => t.id === parseInt(targetMesa));
+                    if (tableObj) tableObj.nfcLinked = true;
+                    saveData();
+                    renderTableGrid();
+                    status.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-check"></i> Mesa ${targetMesa} marcada como vinculada (Simulação)!</span>`;
+                } else {
+                    status.innerHTML = `<span class="text-slate-400">Operação cancelada.</span>`;
+                }
+            }
+        }
+
+        // --- SETTINGS MANAGEMENT ---
+        function renderAll() {
+            renderCalls();
+            renderSectors();
+            renderStaff();
+            renderTableGrid();
+        }
+
+        function renderSectors() {
+            const list = document.getElementById('sectors-list');
+            const dropdowns = document.querySelectorAll('.sector-dropdown');
+
+            list.innerHTML = appData.sectors.map(sec => `
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-bold text-white border border-white/10" style="background-color: ${sec.color}20; border-color: ${sec.color}">
+                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${sec.color}"></span>
+                    ${sec.name}
+                </span>
+            `).join('');
+
+            dropdowns.forEach(dd => {
+                dd.innerHTML = appData.sectors.map(sec => `
+                    <option value="${sec.id}">${sec.name}</option>
+                `).join('');
+            });
+        }
+
+        function addSector(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('sector-name');
+            const colorInput = document.getElementById('sector-color');
+
+            const newSector = {
+                id: Date.now(),
+                name: nameInput.value,
+                color: colorInput.value
+            };
+
+            appData.sectors.push(newSector);
+            saveData();
+            renderSectors();
+            nameInput.value = '';
+        }
+
+        function renderStaff() {
+            const container = document.getElementById('staff-list');
+            container.innerHTML = appData.staff.map(member => {
+                const sector = appData.sectors.find(s => s.id === member.sectorId);
+                return `
+                    <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex items-center justify-between">
+                        <div class="space-y-0.5">
+                            <h4 class="font-bold text-xs text-white">${member.name}</h4>
+                            <p class="text-[10px] text-slate-400">${member.role} • <span style="color: ${sector ? sector.color : '#fff'}">${sector ? sector.name : 'Geral'}</span></p>
+                        </div>
+                        <button onclick="removeStaff(${member.id})" class="text-slate-500 hover:text-red-400 text-xs p-1.5">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addStaffMember(e) {
+            e.preventDefault();
+            const name = document.getElementById('staff-name').value;
+            const role = document.getElementById('staff-role').value;
+            const sectorId = parseInt(document.getElementById('staff-sector').value);
+
+            appData.staff.push({
+                id: Date.now(),
+                name,
+                role,
+                sectorId,
+                available: true
+            });
+
+            saveData();
+            renderStaff();
+            document.getElementById('staff-name').value = '';
+        }
+
+        function removeStaff(id) {
+            appData.staff = appData.staff.filter(s => s.id !== id);
+            saveData();
+            renderStaff();
+        }
+
+        function renderTableGrid() {
+            const grid = document.getElementById('tables-grid');
+            grid.innerHTML = appData.tables.map(tbl => {
+                const sector = appData.sectors.find(s => s.id === tbl.sectorId) || appData.sectors[0];
+                return `
+                    <button onclick="cycleTableSector(${tbl.id})" class="group relative bg-slate-950 p-2.5 rounded-xl border border-slate-800 hover:border-slate-600 transition-all text-center space-y-1">
+                        <div class="text-xs font-black text-white">M${tbl.id.toString().padStart(2, '0')}</div>
+                        <div class="w-full h-1 rounded-full" style="background-color: ${sector.color}"></div>
+                        ${tbl.nfcLinked ? '<span class="text-[9px] text-emerald-400 block font-bold">NFC <i class="fa-solid fa-check"></i></span>' : '<span class="text-[9px] text-slate-600 block">S/ NFC</span>'}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function cycleTableSector(tableId) {
+            const tbl = appData.tables.find(t => t.id === tableId);
+            if (!tbl) return;
+
+            const sectorIds = appData.sectors.map(s => s.id);
+            const currentIdx = sectorIds.indexOf(tbl.sectorId);
+            const nextIdx = (currentIdx + 1) % sectorIds.length;
+
+            tbl.sectorId = sectorIds[nextIdx];
+            saveData();
+            renderTableGrid();
+        }
+    </script>
+</body>
+</html>
